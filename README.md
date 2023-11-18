@@ -1,5 +1,7 @@
 # Counter-centrifuge-counterbalance
 
+-> some parts of the algorithm still need to be improved in order to optimize time <-
+
 The Counter-centrifuge-counterbalance system enables the identification of all possible tube combinations that can be placed in any centrifuge to ensure it is completely balanced. 
 
 This system employs the equation for determining the center of mass of a particle system to ascertain whether the centrifuge-tube assembly is in equilibrium:
@@ -11,3 +13,4 @@ Additionally, it is possible to set a threshold that allows for the display of r
 ![image](https://github.com/KieferBedoya/Counter-centrifuge-counterbalance/assets/85381512/5005330c-923a-4950-ad83-b3f08b11d44d)
 
 Visite the website of Counter-centrifuge-counterbalance interface: 
+https://kodebio.shinyapps.io/Counter-centrifuge-counterbalance/
