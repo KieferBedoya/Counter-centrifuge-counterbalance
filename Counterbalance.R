@@ -242,7 +242,8 @@ ui <- fluidPage(
     mainPanel(width = 7, align = "center",
               fluidRow(
                 column(12, align = "center",
-                       HTML('<h1><a href="https://github.com/KieferBedoya/Counter-centrifuge-counterbalance" target="_blank"><i class="fab fa-github github-icon icon"></i></a> Counter-centrifuge-counterbalance <a href="https://paypal.me/KieferBedoya?country.x=PE&locale.x=es_XC" target="_blank"><i class="fab fa-paypal paypal-icon icon"></i></a></h1>')
+                       HTML('<h1><a href="https://github.com/KieferBedoya/Counter-centrifuge-counterbalance" target="_blank"><i class="fab fa-github github-icon icon"></i></a> Counter-centrifuge-counterbalance <a href="https://paypal.me/KieferBedoya?country.x=PE&locale.x=es_XC" target="_blank"><i class="fab fa-paypal paypal-icon icon"></i></a></h1>'),
+                       p("Developed by Kiefer Bedoya")
                 )
               ),
               
@@ -398,28 +399,3 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
