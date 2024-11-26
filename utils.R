@@ -1,4 +1,21 @@
-#Function files
+get_matrix_dimensions <- function(elements) {
+  best_rows <- NULL
+  best_cols <- NULL
+  min_diff <- Inf
+  
+  for (rows in 1:ceiling(sqrt(elements))) {
+    cols <- ceiling(elements / rows)
+    
+    if (abs(cols - 2 * rows) <= min_diff) {
+      best_rows <- rows
+      best_cols <- cols
+      min_diff <- abs(cols - 2 * rows)
+    }
+  }
+  
+  return(list(rows = best_rows, cols = best_cols))
+} # Determine the best distribution for any number of samples
+
 regular_poly_coords <- function(vertex){
   angle <- 2 * pi * (seq_len(vertex) - 1) / vertex
   x <- cos(angle)
@@ -25,26 +42,35 @@ get_minimal_representation <- function(v) {
   
   return(min_rotation)
 } 
-# From a vector of positions, find the lexicographically minimal equivalent to the vector.
+# From a vector of positions, find the lexicographically equivalent to the vector.
 # for example: c(1, 0, 0, 1) → c(0, 0, 1, 1)
 
-centrifuge_distribution <- function(slot_number, tube_number) {
+
+#### Second version####
+centrifuge_distribution <- function(slot_number, tube_number, tolerance = 0) {
   positions <- combn(slot_number - 1, tube_number - 1)
   
   unique_patterns_set <- new.env(hash = TRUE, parent = emptyenv())
+  
+  coords <- regular_poly_coords(slot_number)
   
   for (i in seq_len(ncol(positions))) {
     pos_ones <- positions[, i]
     binary_vector <- rep(0, slot_number)
     binary_vector[1] <- 1
     binary_vector[pos_ones + 1] <- 1
-    binary_vector
-    get_minimal_representation(binary_vector)
-    min_representation <- get_minimal_representation(binary_vector)
     
-    pattern_string <- paste(min_representation, collapse = "")
+    #verifying the center of mass
+    logical_vector <- as.logical(binary_vector)
     
-    if (!exists(pattern_string, envir = unique_patterns_set, inherits = FALSE)) {
+    Xdev <- sum(coords$x[logical_vector])
+    Ydev <- sum(coords$y[logical_vector])
+    
+    magnitud <- round(sqrt(Xdev^2 + Ydev^2), 5)
+    
+    if(magnitud <= tolerance/100){
+      min_representation <- get_minimal_representation(binary_vector)
+      pattern_string <- paste(min_representation, collapse = "")
       assign(pattern_string, NULL, envir = unique_patterns_set)
     }
   }
@@ -57,12 +83,15 @@ centrifuge_distribution <- function(slot_number, tube_number) {
   
   return(all_permutations)
 }
-# Returns a binary matrix where 0 represent an empty slot and a 1 represent
-# a filled slot. Function considers repetition by circularization and avoid it
 
-centrifuge_positions <- function(slot_number, tube_number, randomize = T){
+# Returns a binary matrix where 0 represent an empty slot and a 1 represent
+# a filled slot. Function considers repetition by circularization and avoid it.
+# In addition, the function filter unbalanced (according threshold) distributions
+
+centrifuge_positions <- function(slot_number, tube_number, tolerance = 0, randomize = T){
   
-  distribution <- centrifuge_distribution(slot_number, tube_number)
+  distribution <- centrifuge_distribution(slot_number, tube_number, tolerance = tolerance)
+  if(is.null(distribution)) return(setNames(list(NULL), tube_number))
   distribution_transformed <- distribution == 1
   positions <- t(apply(distribution_transformed, 1, function(row) which(row)))
   
@@ -72,42 +101,16 @@ centrifuge_positions <- function(slot_number, tube_number, randomize = T){
     new_positions[new_positions > slot_number] <- new_positions[new_positions > slot_number] - slot_number
     positions <- t(apply(new_positions, 1, sort))
   }
-  return(positions)
+  
+  polygon_coords <- regular_poly_coords(slot_number)
+  patterns <- lapply(1:nrow(positions), function(i) polygon_coords[positions[i, ], ])
+  names(patterns)[1] <- tube_number
+  
+  return(patterns)
 }
 # having the matrix with all filled slots, this functions returns only
 # filled positions. In addition, randomize this positions consider the circular
 # nature of the centrifuge
-
-tube_position <- function(polygon_coords, tube_number, tolerance = 0) {
-  posiciones <- centrifuge_positions(nrow(polygon_coords), tube_number)
-  
-  n_positions <- nrow(posiciones)
-  k <- ncol(posiciones)
-  
-  pos_flat <- as.vector(t(posiciones))
-  coords_flat_x <- polygon_coords$x[pos_flat]
-  coords_flat_y <- polygon_coords$y[pos_flat]
-  
-  coords_x <- matrix(coords_flat_x, nrow = n_positions, ncol = k, byrow = TRUE)
-  coords_y <- matrix(coords_flat_y, nrow = n_positions, ncol = k, byrow = TRUE)
-
-  Xdev <- rowSums(coords_x)
-  Ydev <- rowSums(coords_y)
-  
-  magnitud <- round(sqrt(Xdev^2 + Ydev^2), 5)
-  
-  indices <- which(magnitud <= (tolerance / 100))
-  
-  patrones <- lapply(indices, function(i) polygon_coords[posiciones[i, ], ])
-  
-  if (length(patrones) == 0) {
-    patrones <- list(NULL)
-  }
-  
-  names(patrones)[1] <- tube_number
-  
-  return(patrones)
-}
 
 centrifuge_plot <- function(polygon_coords, selected_coords, dot_size=3,
                             dot_color1="#27499d", dot_color2="gray30", 
@@ -130,10 +133,8 @@ centrifuge_plot <- function(polygon_coords, selected_coords, dot_size=3,
   }
 }
 
-# slot_number <- 20
-# tube_number <- 12
+# slot_number <- 12
+# tube_number <- 4
 # polygon_coords <- regular_poly_coords(slot_number)
-# patrones <- tube_position(polygon_coords, tube_number, tolerance = 0)
-# patrones
-# lapply(lapply(patrones, function(k) apply(k, 2, sum)), function(j) sqrt(j[1]^2+j[2]^2))
+# patrones <- centrifuge_positions(slot_number, tube_number, tolerance = 0)
 # centrifuge_plot(polygon_coords, patrones, col_num=2, row_num=1, dot_size = 1.5)
