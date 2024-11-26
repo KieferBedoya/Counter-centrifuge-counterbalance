@@ -17,7 +17,7 @@ ui <- fluidPage(
   ),
   
   sidebarLayout(
-    sidebarPanel(width = 5,
+    sidebarPanel(width = 4,
                  tags$head(
                    tags$style(type="text/css", "#inline label{ display: table-cell; text-align: center; vertical-align: middle; }
                                     #inline .form-group { display: table-row;}"),
@@ -50,7 +50,6 @@ ui <- fluidPage(
                         }"
                      )
                    )
-                   
                  ),
                  tags$div(id = "CT_wellPanel",
                           style = "border: 3px solid #3d83d6; 
@@ -87,7 +86,7 @@ ui <- fluidPage(
                                                         numericInput(inputId = 'CE_tolerance',
                                                                      label = NULL,
                                                                      min = 0,
-                                                                     value = 1,
+                                                                     value = 0,
                                                                      step = 1)
                                                  ),
                                                  column(1,
@@ -145,7 +144,7 @@ ui <- fluidPage(
                                                         numericInput(inputId = 'TU_tolerance',
                                                                      label = NULL,
                                                                      min = 0,
-                                                                     value = 1,
+                                                                     value = 0,
                                                                      step = 1)
                                                  ),
                                                  column(1,
@@ -176,24 +175,40 @@ ui <- fluidPage(
                             column(6,
                                    p("Number of plot rows")
                             ),
-                            column(6,
+                            column(3,
                                    numericInput(inputId = 'plot_row',
                                                 label = NULL,
                                                 min = 1,
                                                 value = 1,
                                                 step = 1)
+                            ),
+                            column(3, align = "center",
+                                   actionGroupButtons(
+                                     inputIds = c("less_row", "more_row"),
+                                     labels = list("-", "+"),
+                                     status = "primary",
+                                     fullwidth = T
+                                   )
                             )
                           ),
                           fluidRow(
                             column(6,
                                    p("Number of plot columns")
                             ),
-                            column(6,
+                            column(3,
                                    numericInput(inputId = 'plot_col',
                                                 label = NULL,
                                                 min = 1,
                                                 value = 1,
                                                 step = 1)
+                            ),
+                            column(3, align = "center",
+                                   actionGroupButtons(
+                                     inputIds = c("less_col", "more_col"),
+                                     labels = list("-", "+"),
+                                     status = "primary",
+                                     fullwidth = T
+                                   )
                             )
                           ),
                           fluidRow(
@@ -239,11 +254,11 @@ ui <- fluidPage(
                  )
     ),
     
-    mainPanel(width = 7, align = "center",
+    mainPanel(width = 8, align = "center",
               fluidRow(
                 column(12, align = "center",
                        HTML('<h1><a href="https://github.com/KieferBedoya/Counter-centrifuge-counterbalance" target="_blank"><i class="fab fa-github github-icon icon"></i></a> Counter-centrifuge-counterbalance <a href="https://paypal.me/KieferBedoya?country.x=PE&locale.x=es_XC" target="_blank"><i class="fab fa-paypal paypal-icon icon"></i></a></h1>'),
-                       p("Developed by Kiefer Bedoya")
+                       p(HTML('Developed by <a href="mailto:kieferbedoya@gmail.com" target="_blank">Kiefer Bedoya</a>'))
                 )
               ),
               
@@ -267,30 +282,7 @@ ui <- fluidPage(
               ),
               br(),
               
-              plotOutput("plot"),
-              br(),br(),br(),br(),br(),br(),
-              fluidRow(
-                column(4, align = "end", h3("rows")),
-                column(2, align = "end",
-                       actionGroupButtons(
-                         inputIds = c("more_row", "less_row"),
-                         labels = list("+", "-"),
-                         status = "danger",
-                         direction = "vertical"
-                       )
-                ),
-                column(2, align = "start",
-                       actionGroupButtons(
-                         inputIds = c("more_col", "less_col"),
-                         labels = list("+", "-"),
-                         status = "danger",
-                         direction = "vertical"
-                       )
-                ),
-                column(4, align = "start", h3("colums"))
-              )
-              
-              
+              plotOutput("plot")
     )
   )
 )
@@ -317,15 +309,17 @@ server <- function(input, output, session) {
   observeEvent(input$CE_run, {
     CE_results$coordenadas <- regular_poly_coords(input$CE_nP)
     patrones <- lapply(1:input$CE_nP, function(nT) {
-      patron <- tube_position(CE_results$coordenadas, nT, tolerance = input$CE_tolerance)
+      patron <- centrifuge_positions(input$CE_nP, nT, tolerance = input$CE_tolerance)
       if(length(patron)>0) sample(patron, 1)[[1]]
       else vector()
     })
     names(patrones) <- 1:input$CE_nP
     CE_results$patrones <- patrones
-
-    updateNumericInput(session, "plot_row", value = 1)
-    updateNumericInput(session, "plot_col", value = 1)
+    
+    dim <- get_matrix_dimensions(input$CE_nP)
+    
+    updateNumericInput(session, "plot_row", value = dim$rows)
+    updateNumericInput(session, "plot_col", value = dim$cols)
   })
   
   CENT_plot <- reactive({
@@ -355,10 +349,12 @@ server <- function(input, output, session) {
                                patrones = NULL)
   observeEvent(input$TU_run, {
     TU_results$coordenadas <- regular_poly_coords(input$TU_nP)
-    TU_results$patrones <- tube_position(TU_results$coordenadas, input$TU_nT, tolerance = input$TU_tolerance)
+    TU_results$patrones <- centrifuge_positions(input$TU_nP, input$TU_nT, tolerance = input$TU_tolerance)
     
-    updateNumericInput(session, "plot_col", value = 1)
-    updateNumericInput(session, "plot_row", value = 1)
+    dim <- get_matrix_dimensions(length(TU_results$patrones))
+    
+    updateNumericInput(session, "plot_row", value = dim$rows)
+    updateNumericInput(session, "plot_col", value = dim$cols)
   })
   
   TUBE_plot <- reactive({
@@ -399,3 +395,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
