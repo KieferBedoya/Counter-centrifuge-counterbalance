@@ -3,7 +3,7 @@
 Visite the website of Counter-centrifuge-counterbalance interface: 
 https://kodebio.shinyapps.io/Counter-centrifuge-counterbalance/
 
--> some parts of the algorithm still need to be improved in order to optimize time <-
+-> The procedure takes considerable time when analyzing a large number of slots, as it evaluates all possible combinations <-
 
 The Counter-centrifuge-counterbalance system enables the identification of all possible tube combinations that can be placed in any centrifuge to ensure it is completely balanced. 
 
