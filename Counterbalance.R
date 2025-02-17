@@ -61,7 +61,7 @@ ui <- fluidPage(
                                                br(),
                                                fluidRow(
                                                  column(6,
-                                                        h4("Total slots", style = "font-weight: bold;")
+                                                        h4("Total holes", style = "font-weight: bold;")
                                                  ),
                                                  column(6,
                                                         numericInput(inputId = 'CE_nP',
@@ -107,7 +107,7 @@ ui <- fluidPage(
                                                br(),
                                                fluidRow(
                                                  column(6,
-                                                        h4("Total slots", style = "font-weight: bold;")
+                                                        h4("Total holes", style = "font-weight: bold;")
                                                  ),
                                                  column(6,
                                                         numericInput(inputId = 'TU_nP',
@@ -225,7 +225,7 @@ ui <- fluidPage(
                           ),
                           fluidRow(
                             column(6,
-                                   p("Fill slot color")
+                                   p("Fill hole color")
                             ),
                             column(6,
                                    colourpicker::colourInput("dot_color1", NULL, "#27499d"),
@@ -233,7 +233,7 @@ ui <- fluidPage(
                           ),
                           fluidRow(
                             column(6,
-                                   p("Empty slot color")
+                                   p("Empty hole color")
                             ),
                             column(6,
                                    colourpicker::colourInput("dot_color2", NULL, "#686464"),
@@ -309,7 +309,7 @@ server <- function(input, output, session) {
   observeEvent(input$CE_run, {
     CE_results$coordenadas <- regular_poly_coords(input$CE_nP)
     patrones <- lapply(1:input$CE_nP, function(nT) {
-      patron <- centrifuge_positions(input$CE_nP, nT, tolerance = input$CE_tolerance)
+      patron <- centrifuge_positions(input$CE_nP, nT, tolerance = input$CE_tolerance, unique = T)
       if(length(patron)>0) sample(patron, 1)[[1]]
       else vector()
     })
@@ -320,6 +320,12 @@ server <- function(input, output, session) {
     
     updateNumericInput(session, "plot_row", value = dim$rows)
     updateNumericInput(session, "plot_col", value = dim$cols)
+    
+    if (dim$rows * dim$cols >= 24) {
+      updateNumericInput(session, "dot_size", value = 1.5)
+    }else{
+      updateNumericInput(session, "dot_size", value = 3)
+    }
   })
   
   CENT_plot <- reactive({
@@ -355,6 +361,12 @@ server <- function(input, output, session) {
     
     updateNumericInput(session, "plot_row", value = dim$rows)
     updateNumericInput(session, "plot_col", value = dim$cols)
+    
+    if (dim$rows * dim$cols >= 24) {
+      updateNumericInput(session, "dot_size", value = 1.5)
+    }else{
+      updateNumericInput(session, "dot_size", value = 3)
+    }
   })
   
   TUBE_plot <- reactive({
